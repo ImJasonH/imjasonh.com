@@ -1,8 +1,8 @@
 application: imjasonh
 version: 1
-runtime: python
-api_version: 1
+runtime: go
+api_version: go1
 
 handlers:
 - url: /.*
-  script: main.py
+  script: _go_app

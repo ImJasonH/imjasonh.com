@@ -3,9 +3,9 @@ package imjasonh
 import (
 	"appengine"
 	"appengine/urlfetch"
-	"code.google.com/p/goauth2/oauth"
-	storage "code.google.com/p/google-api-go-client/storage/v1beta1"
 	"fmt"
+	"imjasonh/oauth"
+	"imjasonh/storage"
 	"net/http"
 	"time"
 )
@@ -15,7 +15,7 @@ const (
 )
 
 var (
-	gcs    storage.Service
+	gcs    *storage.Service
 	expiry = time.Unix(0, 0)
 )
 
@@ -62,7 +62,7 @@ func updateStorageClient(c appengine.Context) error {
 		return err
 	}
 	transport := &oauth.Transport{
-		Token:     token,
+		Token:     &oauth.Token{AccessToken: token},
 		Transport: http.DefaultTransport,
 	}
 	expiry = exp

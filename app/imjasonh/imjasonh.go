@@ -10,4 +10,5 @@ func init() {
 		fmt.Fprint(w, "Welcome to app.imjasonh.com")
 	})
 	http.HandleFunc("/slurp", slurp)
+	http.HandleFunc("/go", go_)
 }

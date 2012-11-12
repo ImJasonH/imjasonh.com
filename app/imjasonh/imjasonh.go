@@ -11,4 +11,5 @@ func init() {
 	})
 	http.HandleFunc("/slurp", slurp)
 	http.HandleFunc("/go", go_)
+	http.HandleFunc("/voice", voice)
 }

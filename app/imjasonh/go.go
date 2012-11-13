@@ -5,6 +5,7 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 	"fmt"
+	"html/template"
 	"net/http"
 	"net/url"
 	"time"
@@ -18,7 +19,8 @@ type Shortcut struct {
 }
 
 const (
-	form = `<html><body><form action="/go" method="POST">
+	form = `<html><body>
+<form action="/go" method="POST">
   <label for="key">Key</label>
   <input type="text" name="key" id="key"></input><br />
 
@@ -27,11 +29,12 @@ const (
 
   <input type="submit" value="Submit"></input> 
 </form>
-<a href="%s">Log out</a>
-</body></html>`
+<a href="{{.LogoutURL}}">Log out</a>
+</body></html>
+`
 
 	login = `<html><body>
-  <a href="%s">Log in to create shortcuts</a>
+  <a href="{{.LoginURL}}">Log in to create shortcuts</a>
 </body></html>`
 
 	path = "/go"
@@ -54,15 +57,30 @@ func go_(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == path || r.URL.Path == path+"/" {
 		usr := user.Current(c)
 		if usr == nil {
-			url, _ := user.LoginURL(c, path)
-			fmt.Fprintf(w, login, url)
+			loginURL, err := user.LoginURL(c, path)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			t := template.Must(template.New("login").Parse(login))
+			t.Execute(w, map[string]string{
+				"LoginURL": loginURL,
+			})
 			return
 		}
 
 		if r.Method == "GET" {
 			// Display new shortcut form
-			logout, _ := user.LogoutURL(c, r.URL.String())
-			fmt.Fprintf(w, fmt.Sprintf(form, logout))
+			logout, err := user.LogoutURL(c, r.URL.String())
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			t := template.Must(template.New("form").Parse(form))
+			t.Execute(w, map[string]string{
+				"LogoutURL": logout,
+			})
 		} else if r.Method == "POST" {
 			// Save shortcut
 			k := r.FormValue("key")

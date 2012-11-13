@@ -34,12 +34,13 @@ const (
   <a href="%s">Log in to create shortcuts</a>
 </body></html>`
 
-	success = `<html><body>
-  <h1>Success!</h1>
-</body></html>`
-
 	path = "/go"
 )
+
+func init() {
+	http.HandleFunc("/go", go_)
+	http.HandleFunc("/go/", go_)
+}
 
 // go_ registers new shortcut links, and redirects to those shortcut links.
 func go_(w http.ResponseWriter, r *http.Request) {
@@ -50,14 +51,7 @@ func go_(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Form.Get("ok") == "1" {
-		fmt.Fprintf(w, success)
-		return
-	}
-
-	q := r.Form.Get("q")
-	// TODO: Set up handler so that it matches regexp so the URL can be /go/asdf instead of /go?q=asdf
-	if q == "" {
+	if r.URL.Path == path || r.URL.Path == path+"/" {
 		usr := user.Current(c)
 		if usr == nil {
 			url, _ := user.LoginURL(c, path)
@@ -81,6 +75,10 @@ func go_(w http.ResponseWriter, r *http.Request) {
 			parsed, err := url.Parse(u)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if !parsed.IsAbs() {
+				http.Error(w, "URL must be absolute", http.StatusBadRequest)
 				return
 			}
 			if r.URL.IsAbs() && parsed.Host == r.URL.Host {
@@ -112,14 +110,16 @@ func go_(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			http.Redirect(w, r, "/go?ok=1", http.StatusSeeOther)
+			fmt.Fprintf(w, "Success!")
 		} else {
 			// TODO: Support DELETE?
 			http.Error(w, "Unsupported method", http.StatusMethodNotAllowed)
 		}
 	} else {
+		key := r.URL.Path[len(path)+1:]
+
 		var s Shortcut
-		dsKey := datastore.NewKey(c, "Shortcut", q, 0, nil)
+		dsKey := datastore.NewKey(c, "Shortcut", key, 0, nil)
 		if err := datastore.Get(c, dsKey, &s); err != nil {
 			if err == datastore.ErrNoSuchEntity {
 				http.Error(w, err.Error(), http.StatusNotFound)
@@ -128,7 +128,6 @@ func go_(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-
 		http.Redirect(w, r, s.URL, http.StatusMovedPermanently)
 	}
 }

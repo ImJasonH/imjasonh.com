@@ -23,13 +23,16 @@ func main() {
 	}
 
 	outFile, err := os.Create(outFilename)
-	defer outFile.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
 	outZip := zip.NewWriter(outFile)
 
-	for _, inFile := range inZip.File {
+	for i, inFile := range inZip.File {
+		if i > 200 {
+			// TODO: Remove this.
+			break
+		}
 		if strings.HasSuffix(inFile.Name, ".mp3") {
 			log.Printf("Skipping %s", inFile.Name)
 			continue
@@ -51,5 +54,9 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+	err = outFile.Close()
+	if err != nil {
+		log.Fatal(err)
 	}
 }

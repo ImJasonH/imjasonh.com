@@ -5,11 +5,19 @@ import (
 	"net/http"
 )
 
+const body = `<html><body>
+  <h3>Welcome to app.imjasonh.com</h3>
+  <p>Constantly under construction since 2012</p>
+  <ul>
+    <li><a href="/go">Go</a>: Simple short URL redirector</li>
+    <li><a href="/slurp">Slurp</a>: Simple copy-to-Cloud-Storage utility</li>
+    <li><a href="/voice">Voice</a>: Analyze your Google Voice usage</li>
+  </ul>
+</body></html>
+`
+
 func init() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Welcome to app.imjasonh.com")
+		fmt.Fprint(w, body)
 	})
-	http.HandleFunc("/slurp", slurp)
-	http.HandleFunc("/go", go_)
-	http.HandleFunc("/voice", voice)
 }

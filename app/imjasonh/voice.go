@@ -15,6 +15,10 @@ const voiceForm = `<html><body>
 </form></body></html>
 `
 
+func init() {
+	http.HandleFunc("/voice", voice)
+}
+
 // voice accepts a zip file of Google Voice messages from Google Takeout
 // and prints information about the calls/texts contained within.
 func voice(w http.ResponseWriter, r *http.Request) {

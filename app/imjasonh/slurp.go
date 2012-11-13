@@ -19,6 +19,10 @@ var (
 	expiry = time.Unix(0, 0)
 )
 
+func init() {
+	http.HandleFunc("/slurp", slurp)
+}
+
 // slurp copies the contents of a given URL to a given GCS key.
 func slurp(w http.ResponseWriter, req *http.Request) {
 	key := req.FormValue("key")

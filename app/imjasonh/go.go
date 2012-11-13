@@ -12,7 +12,6 @@ import (
 )
 
 type Shortcut struct {
-	Key     string
 	URL     string
 	User    string
 	Created time.Time

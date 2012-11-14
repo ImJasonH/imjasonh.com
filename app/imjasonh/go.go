@@ -28,6 +28,13 @@ const (
 
   <input type="submit" value="Submit"></input> 
 </form>
+<ul>
+{{range .Shortcuts}}
+  <li><a href="/go/{{.Key}}">/go/{{.Key}}</a> -> {{.URL}} (created {{.Created}}</li>
+{{else}}
+  <li>You have not created any shortcuts yet.</li>
+{{end}}
+</ul>
 <a href="{{.LogoutURL}}">Log out</a>
 </body></html>
 `
@@ -74,9 +81,39 @@ func newGo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		q := datastore.NewQuery("Shortcut").
+			Filter("User =", usr.Email).
+			Order("-Created").
+			Limit(100)
+		cnt, err := q.Count(c)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		scuts := make([]map[string]interface{}, cnt)
+		i := 0
+		for t := q.Run(c); ; {
+			var s Shortcut
+			key, err := t.Next(&s)
+			if err != nil {
+				if err == datastore.Done {
+					break
+				}
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			scuts[i] = map[string]interface{}{
+				"Key":     key.StringID(),
+				"URL":     s.URL,
+				"Created": s.Created.String(),
+			}
+			i++
+		}
+
 		t := template.Must(template.New("form").Parse(form))
-		t.Execute(w, map[string]string{
+		t.Execute(w, map[string]interface{}{
 			"LogoutURL": logout,
+			"Shortcuts": scuts,
 		})
 	} else if r.Method == "POST" {
 		// Save shortcut

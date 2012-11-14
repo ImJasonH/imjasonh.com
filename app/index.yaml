@@ -15,3 +15,9 @@ indexes:
   - name: To
   - name: Received
     direction: desc
+
+- kind: Shortcut
+  properties:
+  - name: User
+  - name: Created
+    direction: desc

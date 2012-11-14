@@ -1,18 +1,17 @@
 package imjasonh
 
 import (
-	"appengine"
 	"html/template"
 	"math/rand"
 	"net/http"
 	"strconv"
 )
 
-const (
-	warHTML = `
+var games, warCards, values, suits, numCards int
+
+const warHTML = `
 <html><head>
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
-<title>100 Games of War</title>
+<title>{{.NumGames}} Games of War</title>
 
 <style>
 .title { font-size: 75px; }
@@ -47,6 +46,14 @@ table {
     <td></td>
   </tr>
 </table></body></html>`
+
+type gameResult int
+
+const (
+	// Results of games
+	p1win gameResult = iota
+	p2win
+	tie
 )
 
 func init() {
@@ -54,44 +61,84 @@ func init() {
 }
 
 func defaultAndInt(val string, def int) int {
-	if val == "" {
-		i := int64(0)
-		i, _ = strconv.ParseInt(val, 0, 16)
+	if val != "" {
+		i, _ := strconv.ParseInt(val, 0, 16)
 		return int(i)
 	} else {
 		return def
 	}
-	return -1
+	panic("Unreachable")
+}
+
+func pop(in []int) (int, []int) {
+	if len(in) == 1 {
+		return in[0], []int{}
+	} else {
+		return in[0], in[1:]
+	}
+	panic("Unreachable")
+}
+
+func playGame() gameResult {
+	values := 13
+	suits := 3
+	numCards := values * suits
+
+	allCards := rand.Perm(numCards)
+	p1deck := allCards[numCards/2:]
+	p2deck := allCards[:numCards/2]
+
+	for len(p1deck) > 0 && len(p2deck) > 0 {
+		var p1card, p2card int
+		p1card, p1deck = pop(p1deck)
+		p2card, p2deck = pop(p2deck)
+
+		p1val := p1card % values
+		p2val := p2card % values
+
+		switch {
+		case p1val == p2val:
+			// TODO: Actually do war
+		case p1val > p2val:
+			p1deck = append(p1deck, p1card, p2card)
+		case p2val > p1val:
+			p2deck = append(p2deck, p1card, p2card)
+		}
+	}
+
+	switch {
+	case len(p1deck) > 0 && len(p2deck) == 0:
+		return p1win
+	case len(p2deck) > 0 && len(p1deck) == 0:
+		return p2win
+	default:
+		return tie
+	}
+	panic("Unreachable")
 }
 
 // war simulates playing a number of games of the card game War.
 func war(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-
-	games := defaultAndInt(r.FormValue("games"), 100)
-	//warCards := defaultAndInt(r.FormValue("warCards"), 3)
-	values := defaultAndInt(r.FormValue("values"), 13)
-	suits := defaultAndInt(r.FormValue("suits"), 4)
-	numCards := values * suits
+	games = defaultAndInt(r.FormValue("games"), 100)
+	//warCards = defaultAndInt(r.FormValue("warCards"), 3)
+	values = defaultAndInt(r.FormValue("values"), 13)
+	suits = defaultAndInt(r.FormValue("suits"), 4)
+	numCards = values * suits
 	var p1wins, p2wins, ties int
 
-	// TODO: Actually implement card-playing logic.
-	allP1wins := 100
-	allP2wins := 200
+	// TODO: Actually implement total score counter in datastore.
+	allP1wins := -1
+	allP2wins := -1
 
 	for game := 0; game < games; game++ {
-		c.Infof("Game", game)
-		allCards := rand.Perm(numCards)
-		half := numCards / 2
-		p1cards := allCards[:half]
-		p2cards := allCards[half:]
-
-		// TODO: Actually implement War logic.
-		if p1cards[0] > p2cards[0] {
+		// TODO: Do this in a goroutine.
+		gameResult := playGame()
+		switch {
+		case gameResult == p1win:
 			p1wins++
-		} else if p2cards[0] > p1cards[0] {
+		case gameResult == p2win:
 			p2wins++
-		} else {
+		case gameResult == tie:
 			ties++
 		}
 	}

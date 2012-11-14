@@ -4,10 +4,10 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/taskqueue"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -15,10 +15,10 @@ const (
 	delay = 2 * time.Hour
 	limit = 100
 
-// TODO: Add a button to immediately delete a message.
+	// TODO: Add a button to immediately delete a message.
 	mailHTML = `<html><body>
-<h3>{{.To}}</h3>
-<table>
+<h3>Mails to: {{.To}}</h3>
+<table border="1">
   {{range .Mails}}
     <tr>
       <td>{{.Received}}</td>
@@ -29,11 +29,19 @@ const (
   {{end}}
 </table>
 </body></html>`
+
+	explainHTML = `<html><body>
+  <h3>What is this?</h3>
+  <p>Send an email to <b><i>anything</i>@imjasonh-hrd.appspotmail.com</b>, then visit <a href="/mail/anything">/mail/anything</a> to see the emails it has received.</p>
+  <p>This is useful for debugging sending email, and also for signing up for spammy services that require email account authentication.</p>
+  <p>This service is *public* and *not at all secure or reliable*. Please don't use this for anything serious, ever. I mean it.</p>
+</body></html>`
 )
 
 func init() {
 	http.HandleFunc("/_ah/mail/", inbound)
 	http.HandleFunc("/_ah/queue/reapMail", reapMail)
+	http.HandleFunc("/mail", explain)
 	http.HandleFunc("/mail/", view)
 }
 
@@ -97,13 +105,19 @@ func view(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Specify a mailbox", http.StatusBadRequest)
 		return
 	}
-	to := strings.Split(r.URL.Path[len("/mail/"):], "@")[0]
+	to := r.URL.Path[len("/mail/"):] + "@imjasonh-hrd.appspotmail.com"
 
 	q := datastore.NewQuery("Mail").
 		Filter("To =", to).
 		Order("-Received").
-		Limit(100)
-	mails := make([]map[string]string, 100)
+		Limit(limit)
+	cnt, err := q.Count(c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	mails := make([]map[string]string, cnt)
 	i := 0
 	for t := q.Run(c); ; {
 		var m Mail
@@ -126,4 +140,9 @@ func view(w http.ResponseWriter, r *http.Request) {
 		"To":    to,
 		"Mails": mails,
 	})
+}
+
+// explain explains this feature.
+func explain(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, explainHTML)
 }

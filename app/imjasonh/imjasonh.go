@@ -12,6 +12,7 @@ const body = `<html><body>
     <li><a href="/go">Go</a>: Simple short URL redirector</li>
     <li><a href="/slurp">Slurp</a>: Simple copy-to-Cloud-Storage utility</li>
     <li><a href="/voice">Voice</a>: Analyze your Google Voice usage</li>
+    <li><a href="/mail">Mail</a>: Send email to <i>something</i>@imjasonh-hrd.appspot.com and view it online temporarily</li>
   </ul>
 </body></html>
 `

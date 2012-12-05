@@ -3,32 +3,70 @@ package imjasonh
 import (
 	"appengine"
 	"appengine/datastore"
+	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
-	"encoding/json"
 	"strconv"
+	"time"
 )
 
 const (
-	kind = "JsonObject"
+	kind       = "JsonObject"
+	idKey      = "_id"
+	createdKey = "_created"
 )
 
+// TODO: Support PUT to update entities
 func init() {
 	http.HandleFunc("/jsonstore", insert)
-	http.HandleFunc("/jsonstore/", get)
+	http.HandleFunc("/jsonstore/", getOrDelete)
+}
+
+func getOrDelete(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		get(w, r)
+	case "DELETE":
+		delete(w, r)
+	default:
+		http.Error(w, "Unsupported Method", http.StatusMethodNotAllowed)
+	}
+}
+
+func getID(path string) (int64, error) {
+	sid := path[len("/jsonstore/"):]
+	if path == "" {
+		return 0, errors.New("Must specify ID")
+	}
+	id, err := strconv.ParseInt(sid, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func delete(w http.ResponseWriter, r *http.Request) {
+	id, err := getID(r.URL.Path)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	c := appengine.NewContext(r)
+	k := datastore.NewKey(c, kind, "", id, nil)
+	if err = datastore.Delete(c, k); err != nil {
+		if err == datastore.ErrNoSuchEntity {
+			http.Error(w, "Not Found", http.StatusNotFound)
+			return
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
 }
 
 func get(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "Unsupported method", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// TODO: Support DELETE
-	// TODO: Save creation timestamp on objects
-
-	sid := r.URL.Path[len("/jsonstore/"):]
-	id, err := strconv.ParseInt(sid, 10, 64)
+	id, err := getID(r.URL.Path)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -50,6 +88,7 @@ func get(w http.ResponseWriter, r *http.Request) {
 	for _, p := range plist {
 		m[p.Name] = p.Value
 	}
+	m[idKey] = id
 	json.NewEncoder(w).Encode(m)
 }
 
@@ -63,11 +102,12 @@ func insert(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	m[createdKey] = time.Now()
 
 	plist := make(datastore.PropertyList, 0)
 	for k, v := range m {
-		p := datastore.Property {
-			Name: k,
+		p := datastore.Property{
+			Name:  k,
 			Value: v,
 		}
 		plist = append(plist, p)
@@ -81,7 +121,7 @@ func insert(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	m["__key__"] = k.IntID()
+	m[idKey] = k.IntID()
 	json.NewEncoder(w).Encode(m)
 }
 

@@ -21,6 +21,8 @@ func init() {
 }
 
 func jsonstore(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+
 	c := appengine.NewContext(r)
 	if r.URL.Path == "/jsonstore" {
 		switch r.Method {

@@ -4,8 +4,6 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"encoding/json"
-	"errors"
-	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -17,44 +15,52 @@ const (
 	createdKey = "_created"
 )
 
-// TODO: Support PUT to update entities
 func init() {
-	http.HandleFunc("/jsonstore", insert)
-	http.HandleFunc("/jsonstore/", getOrDelete)
+	http.HandleFunc("/jsonstore", jsonstore)
+	http.HandleFunc("/jsonstore/", jsonstore)
 }
 
-func getOrDelete(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		get(w, r)
-	case "DELETE":
-		delete(w, r)
-	default:
-		http.Error(w, "Unsupported Method", http.StatusMethodNotAllowed)
-	}
-}
-
-func getID(path string) (int64, error) {
-	sid := path[len("/jsonstore/"):]
-	if path == "" {
-		return 0, errors.New("Must specify ID")
-	}
-	id, err := strconv.ParseInt(sid, 10, 64)
-	if err != nil {
-		return 0, err
-	}
-	return id, nil
-}
-
-func delete(w http.ResponseWriter, r *http.Request) {
-	id, err := getID(r.URL.Path)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+func jsonstore(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
+	if r.URL.Path == "/jsonstore" {
+		switch r.Method {
+		case "POST":
+			insert(w, r)
+			return
+		case "GET":
+			list(w, c)
+			return
+		}
+	} else {
+		sid := r.URL.Path[len("/jsonstore/"):]
+		if path == "" {
+			http.Error(w, "Must specify ID", http.StatusBadRequest)
+			return
+		}
+		id, err := strconv.ParseInt(sid, 10, 64)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		switch r.Method {
+		case "GET":
+			get(w, id, c)
+			return
+		case "DELETE":
+			delete(w, id, c)
+			return
+		case "PUT":
+			update(w, id, c)
+			return
+		}
+	}
+	http.Error(w, "Unsupported Method", http.StatusMethodNotAllowed)
+}
+
+func delete(w http.ResponseWriter, id int64, c appengine.Context) {
 	k := datastore.NewKey(c, kind, "", id, nil)
-	if err = datastore.Delete(c, k); err != nil {
+	if err := datastore.Delete(c, k); err != nil {
 		if err == datastore.ErrNoSuchEntity {
 			http.Error(w, "Not Found", http.StatusNotFound)
 			return
@@ -65,14 +71,7 @@ func delete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func get(w http.ResponseWriter, r *http.Request) {
-	id, err := getID(r.URL.Path)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	c := appengine.NewContext(r)
+func get(w http.ResponseWriter, id int64, c appengine.Context) {
 	k := datastore.NewKey(c, kind, "", id, nil)
 	var plist datastore.PropertyList
 	if err := datastore.Get(c, k, &plist); err != nil {
@@ -105,14 +104,14 @@ func insert(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unsupported Method", http.StatusMethodNotAllowed)
 		return
 	}
-	m, err := parse(r.Body)
-	if err != nil {
+	var m map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	m[createdKey] = time.Now()
 
-	plist := make(datastore.PropertyList, 0)
+	plist := make(datastore.PropertyList, 0, len(m))
 	for k, v := range m {
 		if _, mult := v.([]interface{}); mult {
 			for _, mv := range v.([]interface{}) {
@@ -133,7 +132,7 @@ func insert(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
 	k := datastore.NewIncompleteKey(c, kind, nil)
-	k, err = datastore.Put(c, k, &plist)
+	k, err := datastore.Put(c, k, &plist)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -142,10 +141,10 @@ func insert(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(m)
 }
 
-func parse(r io.Reader) (map[string]interface{}, error) {
-	var m map[string]interface{}
-	if err := json.NewDecoder(r).Decode(&m); err != nil {
-		return nil, err
-	}
-	return m, nil
+func list(w http.ResponseWriter, c appengine.Context) {
+	// TODO: Implement this, with rudimentary queries.
+}
+
+func update(w http.ResponseWriter, id int64, c appengine.Context) {
+	// TODO: Implement this.
 }

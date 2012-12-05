@@ -86,7 +86,15 @@ func get(w http.ResponseWriter, r *http.Request) {
 	}
 	m := make(map[string]interface{})
 	for _, p := range plist {
-		m[p.Name] = p.Value
+		if _, exists := m[p.Name]; exists {
+			if _, isArr := m[p.Name].([]interface{}); isArr {
+				m[p.Name] = append(m[p.Name].([]interface{}), p.Value)
+			} else {
+				m[p.Name] = []interface{}{m[p.Name], p.Value}
+			}
+		} else {
+			m[p.Name] = p.Value
+		}
 	}
 	m[idKey] = id
 	json.NewEncoder(w).Encode(m)
@@ -106,11 +114,20 @@ func insert(w http.ResponseWriter, r *http.Request) {
 
 	plist := make(datastore.PropertyList, 0)
 	for k, v := range m {
-		p := datastore.Property{
-			Name:  k,
-			Value: v,
+		if _, mult := v.([]interface{}); mult {
+			for _, mv := range v.([]interface{}) {
+				plist = append(plist, datastore.Property{
+					Name: k,
+					Value: mv,
+					Multiple: true,
+				})
+			}
+		} else {
+			plist = append(plist, datastore.Property{
+				Name:  k,
+				Value: v,
+			})
 		}
-		plist = append(plist, p)
 	}
 
 	c := appengine.NewContext(r)

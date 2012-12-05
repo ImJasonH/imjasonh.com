@@ -117,8 +117,8 @@ func insert(w http.ResponseWriter, r *http.Request) {
 		if _, mult := v.([]interface{}); mult {
 			for _, mv := range v.([]interface{}) {
 				plist = append(plist, datastore.Property{
-					Name: k,
-					Value: mv,
+					Name:     k,
+					Value:    mv,
 					Multiple: true,
 				})
 			}

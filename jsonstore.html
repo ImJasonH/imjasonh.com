@@ -1,12 +1,9 @@
 <html>
 <head>
 <script>
-var url = "http://app.imjasonh.com";
-
+// POST some data
 var xhr = new XMLHttpRequest();
-
-// Insert new data
-xhr.open("POST", url + "/jsonstore", false);
+xhr.open("POST", "http://app.imjasonh.com/jsonstore", false);
 data = {
 	"a": "aaa",
 	"b": true,
@@ -18,19 +15,23 @@ data = {
 };
 xhr.send(JSON.stringify(data));
 console.log(xhr.responseText);
+id = JSON.parse(xhr.responseText)['_id'];
 
-// Get that data
-id = JSON.parse(xhr.responseText)["_id"];
-xhr.open("GET", url + "/jsonstore/" + id, false);
+// GET that data
+var xhr = new XMLHttpRequest();
+xhr.open("GET", "http://app.imjasonh.com/jsonstore/" + id, false);
 xhr.send();
 console.log(xhr.responseText);
 
-// Delete the data
-xhr.open("DELETE", url + "/jsonstore/" + id, false);
+// DELETE the data
+var xhr = new XMLHttpRequest();
+xhr.open("DELETE", "http://app.imjasonh.com/jsonstore/" + id, false);
 xhr.send();
+console.log(xhr.responseText);
 
-// Yep, it's gone.
-xhr.open("GET", url + "/jsonstore/" + id, false);
+// Yep, it's gone!
+var xhr = new XMLHttpRequest();
+xhr.open("GET", "http://app.imjasonh.com/jsonstore/" + id, false);
 xhr.send();
 console.log(xhr.responseText);
 </script>

@@ -1,15 +1,20 @@
 package imjasonh
 
+// TODO: Support other request/response formats besides JSON (e.g., xml, gob)
+// TODO: Figure out if PropertyList can support nested objects, or fail if they are detected.
+
 import (
 	"appengine"
 	"appengine/datastore"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
 )
 
 const (
+	appKind    = "Application"
 	kind       = "JsonObject"
 	idKey      = "_id"
 	createdKey = "_created"
@@ -18,8 +23,29 @@ const (
 func init() {
 	http.HandleFunc("/jsonstore", jsonstore)
 	http.HandleFunc("/jsonstore/", jsonstore)
+	http.HandleFunc("/jsonstore/provision", provision)
 }
 
+type Application struct {
+	Name, SecretKey string
+}
+
+// provisions a new Application, writing the app ID+secret to the response
+func provision(w http.ResponseWriter, r *http.Request) {
+	appName := "FOO"
+	secret := "BAR"
+	c := appengine.NewContext(r)
+
+	k := datastore.NewKey(c, appKind, appName, 0, nil)
+	app := Application{appName, secret}
+	if _, err := datastore.Put(c, k, &app); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(app)
+}
+
+// jsonstore dispatches requests to the relevant API method and arranges certain common state
 func jsonstore(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 
@@ -27,7 +53,7 @@ func jsonstore(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/jsonstore" {
 		switch r.Method {
 		case "POST":
-			insert(w, r)
+			insert(w, r.Body, c)
 			return
 		case "GET":
 			list(w, c)
@@ -52,8 +78,9 @@ func jsonstore(w http.ResponseWriter, r *http.Request) {
 		case "DELETE":
 			delete(w, id, c)
 			return
-		case "PUT":
-			update(w, id, c)
+		case "POST":
+			// This is strictly "replace all properties/values", not "add new properties, update existing"
+			update(w, id, r.Body, c)
 			return
 		}
 	}
@@ -65,11 +92,10 @@ func delete(w http.ResponseWriter, id int64, c appengine.Context) {
 	if err := datastore.Delete(c, k); err != nil {
 		if err == datastore.ErrNoSuchEntity {
 			http.Error(w, "Not Found", http.StatusNotFound)
-			return
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
+		return
 	}
 }
 
@@ -79,11 +105,10 @@ func get(w http.ResponseWriter, id int64, c appengine.Context) {
 	if err := datastore.Get(c, k, &plist); err != nil {
 		if err == datastore.ErrNoSuchEntity {
 			http.Error(w, "Not Found", http.StatusNotFound)
-			return
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
+		return
 	}
 	m := make(map[string]interface{})
 	for _, p := range plist {
@@ -101,15 +126,28 @@ func get(w http.ResponseWriter, id int64, c appengine.Context) {
 	json.NewEncoder(w).Encode(m)
 }
 
-func insert(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Unsupported Method", http.StatusMethodNotAllowed)
-		return
-	}
-	var m map[string]interface{}
-	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
+func insert(w http.ResponseWriter, r io.Reader, c appengine.Context) {
+	plist, m, err := jsonToPlist(r)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	k := datastore.NewIncompleteKey(c, kind, nil)
+	k, err = datastore.Put(c, k, &plist)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	m[idKey] = k.IntID()
+	json.NewEncoder(w).Encode(m)
+}
+
+// jsonToPlist decodes a JSON stream into a PropertyList for storing in the datastore, and a JSON-encodable representation of the data.
+func jsonToPlist(r io.Reader) (datastore.PropertyList, map[string]interface{}, error) {
+	var m map[string]interface{}
+	if err := json.NewDecoder(r).Decode(&m); err != nil {
+		return nil, nil, err
 	}
 	m[createdKey] = time.Now()
 
@@ -130,23 +168,25 @@ func insert(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	}
-
-	c := appengine.NewContext(r)
-
-	k := datastore.NewIncompleteKey(c, kind, nil)
-	k, err := datastore.Put(c, k, &plist)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	m[idKey] = k.IntID()
-	json.NewEncoder(w).Encode(m)
+	return plist, m, nil
 }
 
 func list(w http.ResponseWriter, c appengine.Context) {
 	// TODO: Implement this, with rudimentary queries.
 }
 
-func update(w http.ResponseWriter, id int64, c appengine.Context) {
-	// TODO: Implement this.
+func update(w http.ResponseWriter, id int64, r io.Reader, c appengine.Context) {
+	plist, m, err := jsonToPlist(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	k := datastore.NewKey(c, kind, "", id, nil)
+	if _, err := datastore.Put(c, k, &plist); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	m[idKey] = id
+	json.NewEncoder(w).Encode(m)
 }

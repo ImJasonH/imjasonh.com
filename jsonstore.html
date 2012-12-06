@@ -1,0 +1,40 @@
+<html>
+<head>
+<script>
+var url = "http://app.imjasonh.com";
+
+var xhr = new XMLHttpRequest();
+
+// Insert new data
+xhr.open("POST", url + "/jsonstore", false);
+data = {
+	"a": "aaa",
+	"b": true,
+	"c": [
+		"hello",
+		true,
+		123
+	]
+};
+xhr.send(JSON.stringify(data));
+console.log(xhr.responseText);
+
+// Get that data
+id = JSON.parse(xhr.responseText)["_id"];
+xhr.open("GET", url + "/jsonstore/" + id, false);
+xhr.send();
+console.log(xhr.responseText);
+
+// Delete the data
+xhr.open("DELETE", url + "/jsonstore/" + id, false);
+xhr.send();
+
+// Yep, it's gone.
+xhr.open("GET", url + "/jsonstore/" + id, false);
+xhr.send();
+console.log(xhr.responseText);
+</script>
+</head>
+<body>
+</body>
+</html>

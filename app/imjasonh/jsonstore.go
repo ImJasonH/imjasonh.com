@@ -16,14 +16,21 @@ import (
 )
 
 const (
-	kind       = "JsonObject"
-	idKey      = "_id"
-	createdKey = "_created"
+	kind         = "JsonObject"
+	idKey        = "_id"
+	createdKey   = "_created"
+	defaultLimit = 10
 )
 
 func init() {
 	http.HandleFunc("/jsonstore", jsonstore)
 	http.HandleFunc("/jsonstore/", jsonstore)
+}
+
+type UserQuery struct {
+	Limit, Offset                      int
+	FilterKey, FilterType, FilterValue string
+	Cursor                             string
 }
 
 // jsonstore dispatches requests to the relevant API method and arranges certain common state
@@ -37,7 +44,8 @@ func jsonstore(w http.ResponseWriter, r *http.Request) {
 			insert(w, r.Body, c)
 			return
 		case "GET":
-			list(w, c)
+			// TODO: Parse user request into UserQuery and pass to list method
+			list(w, UserQuery{}, c)
 			return
 		}
 	} else {
@@ -155,12 +163,13 @@ func mapToPlist(m map[string]interface{}) datastore.PropertyList {
 	return plist
 }
 
-func list(w http.ResponseWriter, c appengine.Context) {
-	limit := 10
+func list(w http.ResponseWriter, uq UserQuery, c appengine.Context) {
+	limit := 3
 	q := datastore.NewQuery(kind).Limit(limit)
 
-	r := make([]map[string]interface{}, 0, limit)
+	items := make([]map[string]interface{}, 0, limit)
 
+	var crs datastore.Cursor
 	for t := q.Run(c); ; {
 		var plist datastore.PropertyList
 		k, err := t.Next(&plist)
@@ -172,7 +181,15 @@ func list(w http.ResponseWriter, c appengine.Context) {
 			return
 		}
 		m := plistToMap(plist, k)
-		r = append(r, m)
+		items = append(items, m)
+		if crs, err = t.Cursor(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+	r := map[string]interface{}{
+		"items":          items,
+		"nextStartToken": crs.String(),
 	}
 	json.NewEncoder(w).Encode(r)
 }

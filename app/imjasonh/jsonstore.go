@@ -2,6 +2,8 @@ package imjasonh
 
 // TODO: Support other request/response formats besides JSON (e.g., xml, gob)
 // TODO: Figure out if PropertyList can support nested objects, or fail if they are detected.
+// TODO: Add rudimentary single-property queries, pagination, sorting, etc.
+// TODO: Allow clients to specify the Kind? Namespace datastore by user identity (and maintain user identity)?
 
 import (
 	"appengine"
@@ -94,14 +96,17 @@ func get(w http.ResponseWriter, id int64, c appengine.Context) {
 }
 
 func insert(w http.ResponseWriter, r io.Reader, c appengine.Context) {
-	plist, m, err := jsonToPlist(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	var m map[string]interface{}
+	if err := json.NewDecoder(r).Decode(&m); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	m[createdKey] = time.Now()
+
+	plist := mapToPlist(m)
 
 	k := datastore.NewIncompleteKey(c, kind, nil)
-	k, err = datastore.Put(c, k, &plist)
+	k, err := datastore.Put(c, k, &plist)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -110,6 +115,7 @@ func insert(w http.ResponseWriter, r io.Reader, c appengine.Context) {
 	json.NewEncoder(w).Encode(m)
 }
 
+// plistToMap transforms a PropertyList such as you would get from the datastore into a map[string]interface{} suitable for JSON-encoding.
 func plistToMap(plist datastore.PropertyList, k *datastore.Key) map[string]interface{} {
 	m := make(map[string]interface{})
 	for _, p := range plist {
@@ -127,14 +133,8 @@ func plistToMap(plist datastore.PropertyList, k *datastore.Key) map[string]inter
 	return m
 }
 
-// jsonToPlist decodes a JSON stream into a PropertyList for storing in the datastore, and a JSON-encodable representation of the data.
-func jsonToPlist(r io.Reader) (datastore.PropertyList, map[string]interface{}, error) {
-	var m map[string]interface{}
-	if err := json.NewDecoder(r).Decode(&m); err != nil {
-		return nil, nil, err
-	}
-	m[createdKey] = time.Now()
-
+// mapToPlist transforms a map[string]interface{} such as you would get from decoding JSON into a PropertyList to store in the datastore.
+func mapToPlist(m map[string]interface{}) datastore.PropertyList {
 	plist := make(datastore.PropertyList, 0, len(m))
 	for k, v := range m {
 		if _, mult := v.([]interface{}); mult {
@@ -152,14 +152,14 @@ func jsonToPlist(r io.Reader) (datastore.PropertyList, map[string]interface{}, e
 			})
 		}
 	}
-	return plist, m, nil
+	return plist
 }
 
-// TODO: Add rudimentary single-property queries, pagination, sorting, etc.
 func list(w http.ResponseWriter, c appengine.Context) {
-	q := datastore.NewQuery(kind).Limit(10)
+	limit := 10
+	q := datastore.NewQuery(kind).Limit(limit)
 
-	r := []map[string]interface{}{}
+	r := make([]map[string]interface{}, 0, limit)
 
 	for t := q.Run(c); ; {
 		var plist datastore.PropertyList
@@ -178,11 +178,13 @@ func list(w http.ResponseWriter, c appengine.Context) {
 }
 
 func update(w http.ResponseWriter, id int64, r io.Reader, c appengine.Context) {
-	plist, m, err := jsonToPlist(r)
-	if err != nil {
+	var m map[string]interface{}
+	if err := json.NewDecoder(r).Decode(&m); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	plist := mapToPlist(m)
 
 	k := datastore.NewKey(c, kind, "", id, nil)
 	if _, err := datastore.Put(c, k, &plist); err != nil {

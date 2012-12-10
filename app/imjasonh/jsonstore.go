@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	appKind    = "Application"
 	kind       = "JsonObject"
 	idKey      = "_id"
 	createdKey = "_created"
@@ -23,26 +22,6 @@ const (
 func init() {
 	http.HandleFunc("/jsonstore", jsonstore)
 	http.HandleFunc("/jsonstore/", jsonstore)
-	http.HandleFunc("/jsonstore/provision", provision)
-}
-
-type Application struct {
-	Name, SecretKey string
-}
-
-// provisions a new Application, writing the app ID+secret to the response
-func provision(w http.ResponseWriter, r *http.Request) {
-	appName := "FOO"
-	secret := "BAR"
-	c := appengine.NewContext(r)
-
-	k := datastore.NewKey(c, appKind, appName, 0, nil)
-	app := Application{appName, secret}
-	if _, err := datastore.Put(c, k, &app); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	json.NewEncoder(w).Encode(app)
 }
 
 // jsonstore dispatches requests to the relevant API method and arranges certain common state
@@ -110,19 +89,7 @@ func get(w http.ResponseWriter, id int64, c appengine.Context) {
 		}
 		return
 	}
-	m := make(map[string]interface{})
-	for _, p := range plist {
-		if _, exists := m[p.Name]; exists {
-			if _, isArr := m[p.Name].([]interface{}); isArr {
-				m[p.Name] = append(m[p.Name].([]interface{}), p.Value)
-			} else {
-				m[p.Name] = []interface{}{m[p.Name], p.Value}
-			}
-		} else {
-			m[p.Name] = p.Value
-		}
-	}
-	m[idKey] = id
+	m := plistToMap(plist, k)
 	json.NewEncoder(w).Encode(m)
 }
 
@@ -141,6 +108,23 @@ func insert(w http.ResponseWriter, r io.Reader, c appengine.Context) {
 	}
 	m[idKey] = k.IntID()
 	json.NewEncoder(w).Encode(m)
+}
+
+func plistToMap(plist datastore.PropertyList, k *datastore.Key) map[string]interface{} {
+	m := make(map[string]interface{})
+	for _, p := range plist {
+		if _, exists := m[p.Name]; exists {
+			if _, isArr := m[p.Name].([]interface{}); isArr {
+				m[p.Name] = append(m[p.Name].([]interface{}), p.Value)
+			} else {
+				m[p.Name] = []interface{}{m[p.Name], p.Value}
+			}
+		} else {
+			m[p.Name] = p.Value
+		}
+	}
+	m[idKey] = k.IntID()
+	return m
 }
 
 // jsonToPlist decodes a JSON stream into a PropertyList for storing in the datastore, and a JSON-encodable representation of the data.
@@ -171,8 +155,26 @@ func jsonToPlist(r io.Reader) (datastore.PropertyList, map[string]interface{}, e
 	return plist, m, nil
 }
 
+// TODO: Add rudimentary single-property queries, pagination, sorting, etc.
 func list(w http.ResponseWriter, c appengine.Context) {
-	// TODO: Implement this, with rudimentary queries.
+	q := datastore.NewQuery(kind).Limit(10)
+
+	r := []map[string]interface{}{}
+
+	for t := q.Run(c); ; {
+		var plist datastore.PropertyList
+		k, err := t.Next(&plist)
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		m := plistToMap(plist, k)
+		r = append(r, m)
+	}
+	json.NewEncoder(w).Encode(r)
 }
 
 func update(w http.ResponseWriter, id int64, r io.Reader, c appengine.Context) {

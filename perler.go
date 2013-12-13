@@ -9,10 +9,12 @@ import (
 	"image/png"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 const (
-	rgb8to16 = 0x101 // Multiply an 8-bit RGB value to 16-bit
+	rgb8to16          = 0x101       // Multiply an 8-bit RGB value to 16-bit
+	perlerWidthInches = 0.181102362 // Inches width of a Perler bead
 
 	bufSize = 2 << 17 // 256K
 )
@@ -29,8 +31,7 @@ const perlerForm = `
 
 const perlerOut = `
 <html><body>
-  <img src="%s" />
-</body></html>
+  <img src="%s" /><br />
 `
 
 func init() {
@@ -61,12 +62,23 @@ func perlerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	paletted := palettedImage{img, palette}
 
+	// Make a resized image
 	resized := resizedImage{paletted, 5, true}
 
 	buf := bytes.NewBuffer(make([]byte, 0, bufSize))
 	png.Encode(buf, resized)
 	dataURI := fmt.Sprintf("data:image/png;base64,%s", base64.StdEncoding.EncodeToString(buf.Bytes()))
 	w.Write([]byte(fmt.Sprintf(perlerOut, dataURI)))
+
+	// Physical dimensions
+	str := func(x int) string {
+		return strconv.FormatFloat(float64(x)*perlerWidthInches, 'g', 3, 64)
+	}
+	physX := str(img.Bounds().Max.X)
+	physY := str(img.Bounds().Max.Y)
+	w.Write([]byte(fmt.Sprintf("Physical dimensions: %s\" x %s\"<br />", physX, physY)))
+
+	w.Write([]byte("</body></html>"))
 }
 
 type resizedImage struct {

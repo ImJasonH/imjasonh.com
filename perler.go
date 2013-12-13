@@ -41,9 +41,9 @@ var perlerTmpl = template.Must(template.New("tmpl").Parse(`
 
   <img src="{{.DataURI}}" /><br />
 
-  {{.Total}} total beads<br />
-  Physical dimensions: {{.PhysDim}}<br />
+  <p>Physical dimensions: {{.PhysDim}}</p>
 
+  <p>{{.Total}} total beads</p>
   <table>
     {{range .Counts}}
     <tr><td>{{.Key}}</td><td>{{.Val}}</td>
@@ -89,7 +89,7 @@ func perlerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Physical dimensions
 	str := func(x int) string {
-		return strconv.FormatFloat(float64(x)*perlerWidthInches, 'g', 3, 64)
+		return strconv.FormatFloat(float64(x)*perlerWidthInches, 'g', 2, 64)
 	}
 	physX := str(img.Bounds().Max.X)
 	physY := str(img.Bounds().Max.Y)

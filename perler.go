@@ -23,11 +23,15 @@ const (
 
 const perlerForm = `
 <html><body>
-  <form method="POST" action="/perler" enctype="multipart/form-data">
+  <form id="form" method="POST" action="/perler" enctype="multipart/form-data">
     <label for="file">Select a PNG file</label>
     <input type="file" name="file" id="file" accept="image/png"></input>
-    <input type="submit" name="submit" value="Submit"></input>
   </form>
+  <script type="text/javascript">
+    document.getElementById("file").onchange = function() {
+      document.getElementById("form").submit();
+    };
+  </script>
 </body></html>
 `
 

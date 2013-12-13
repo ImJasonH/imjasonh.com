@@ -89,7 +89,7 @@ func perlerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Physical dimensions
 	str := func(x int) string {
-		return strconv.FormatFloat(float64(x)*perlerWidthInches, 'g', 2, 64)
+		return strconv.FormatFloat(float64(x)*perlerWidthInches, 'g', 3, 64)
 	}
 	physX := str(img.Bounds().Max.X)
 	physY := str(img.Bounds().Max.Y)
@@ -139,6 +139,10 @@ func (r resizedImage) Bounds() image.Rectangle {
 }
 
 func (r resizedImage) At(x, y int) color.Color {
+	oc := r.orig.At(x/r.factor, y/r.factor)
+	if _, _, _, a := oc.RGBA(); a == 0 {
+		return color.Transparent
+	}
 	if r.delineate && (x%r.factor == 0 || y%r.factor == 0) {
 		return color.Gray{0}
 	}

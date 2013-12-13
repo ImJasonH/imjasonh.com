@@ -1,18 +1,15 @@
 package imjasonh
 
 import (
-	"fmt"
 	"net/http"
 )
 
 const body = `<html><body>
   <h3>Welcome to app.imjasonh.com</h3>
-  <p>Constantly under construction since 2012</p>
+  <p>My App Engine playground, constantly under construction since 2012</p>
   <ul>
     <li><a href="/go">Go</a>: Simple short URL redirector</li>
     <li><a href="/war">100 Games of War</a>: Simulate playing 100 games of the popular card game War&trade;</li>
-    <li><a href="/slurp">Slurp</a>: Simple copy-to-Cloud-Storage utility</li>
-    <li><a href="/voice">Voice</a>: Analyze your Google Voice usage</li>
     <li><a href="/mail">Mail</a>: Send email to <i>something</i>@imjasonh-hrd.appspot.com and view it online temporarily</li>
   </ul>
 </body></html>
@@ -20,6 +17,6 @@ const body = `<html><body>
 
 func init() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, body)
+		w.Write([]byte(body))
 	})
 }

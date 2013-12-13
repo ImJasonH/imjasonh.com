@@ -1,6 +1,9 @@
 package imjasonh
 
 import (
+	"bytes"
+	"encoding/base64"
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -17,6 +20,13 @@ const perlerForm = `
     <input type="file" name="file" id="file" accept="image/png"></input>
     <input type="submit" name="submit" value="Submit"></input>
   </form>
+</body></html>
+`
+
+const perlerOut = `
+<html><body>
+  <h1>Exciting!</h1>
+  <img src="%s" />
 </body></html>
 `
 
@@ -47,10 +57,10 @@ func perlerHandler(w http.ResponseWriter, r *http.Request) {
 		palette = append(palette, k)
 	}
 	paletted := palettedImage{img, palette}
-	w.Header().Set("Content-Type", "image/png")
-	png.Encode(w, paletted)
-
-	// TODO: Display an HTML page with stats about the image, and the image embedded as a data URI
+	buf := bytes.NewBuffer(make([]byte, 0, 10000)) // TODO
+	png.Encode(buf, paletted)
+	dataURI := fmt.Sprintf("data:image/png;base64,%s", base64.StdEncoding.EncodeToString(buf.Bytes()))
+	w.Write([]byte(fmt.Sprintf(perlerOut, dataURI)))
 }
 
 type palettedImage struct {

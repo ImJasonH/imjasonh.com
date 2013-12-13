@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 )
 
@@ -77,6 +78,28 @@ func perlerHandler(w http.ResponseWriter, r *http.Request) {
 	physX := str(img.Bounds().Max.X)
 	physY := str(img.Bounds().Max.Y)
 	w.Write([]byte(fmt.Sprintf("Physical dimensions: %s\" x %s\"<br />", physX, physY)))
+
+	// Total and per-bead counts
+	var total uint32
+	colors := make(map[string]uint32)
+	for i := paletted.Bounds().Min.X; i < paletted.Bounds().Max.X; i++ {
+		for j := paletted.Bounds().Min.Y; j < paletted.Bounds().Max.Y; j++ {
+			c := paletted.At(i, j)
+			_, _, _, a := c.RGBA()
+			if a == 0 {
+				continue
+			}
+			colors[paletteMap[c]]++
+			total++
+		}
+	}
+	w.Write([]byte(fmt.Sprintf("%d total beads<br />", total)))
+	pairs := sortMap(colors)
+	w.Write([]byte("<table>"))
+	for p := 0; p < len(pairs); p++ {
+		w.Write([]byte(fmt.Sprintf("<tr><td>%s</td><td>%d</td></tr>", pairs[p].key, pairs[p].val)))
+	}
+	w.Write([]byte("</table>"))
 
 	w.Write([]byte("</body></html>"))
 }
@@ -248,4 +271,23 @@ var paletteMap = map[color.Color]string{
 	col(160, 205, 245): "N28-LIGHT-BLUE",
 	col(225, 160, 85):  "N29-PEARL-ORANGE",
 	col(200, 200, 120): "N30-OLIVE",
+}
+
+type pair struct {
+	key string
+	val uint32
+}
+type pairlist []pair
+func (p pairlist) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p pairlist) Len() int { return len(p) }
+func (p pairlist) Less(i, j int) bool { return p[i].val > p[j].val }
+func sortMap(m map[string]uint32) pairlist {
+	p := make(pairlist, len(m))
+	i := 0
+	for k, v := range m {
+		p[i] = pair{k, v}
+		i++
+	}
+	sort.Sort(p)
+	return p
 }

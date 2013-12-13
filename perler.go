@@ -11,7 +11,11 @@ import (
 	"net/http"
 )
 
-const rgb8to16 = 0x101 // Multiply an 8-bit RGB value to 16-bit
+const (
+	rgb8to16 = 0x101 // Multiply an 8-bit RGB value to 16-bit
+
+	bufSize = 2 << 17 // 256K
+)
 
 const perlerForm = `
 <html><body>
@@ -25,7 +29,6 @@ const perlerForm = `
 
 const perlerOut = `
 <html><body>
-  <h1>Exciting!</h1>
   <img src="%s" />
 </body></html>
 `
@@ -57,10 +60,37 @@ func perlerHandler(w http.ResponseWriter, r *http.Request) {
 		palette = append(palette, k)
 	}
 	paletted := palettedImage{img, palette}
-	buf := bytes.NewBuffer(make([]byte, 0, 10000)) // TODO
-	png.Encode(buf, paletted)
+
+	resized := resizedImage{paletted, 5, true}
+
+	buf := bytes.NewBuffer(make([]byte, 0, bufSize))
+	png.Encode(buf, resized)
 	dataURI := fmt.Sprintf("data:image/png;base64,%s", base64.StdEncoding.EncodeToString(buf.Bytes()))
 	w.Write([]byte(fmt.Sprintf(perlerOut, dataURI)))
+}
+
+type resizedImage struct {
+	orig      image.Image
+	factor    int
+	delineate bool
+}
+
+func (r resizedImage) ColorModel() color.Model {
+	return r.orig.ColorModel()
+}
+
+func (r resizedImage) Bounds() image.Rectangle {
+	return image.Rectangle{r.orig.Bounds().Min, image.Point{
+		X: r.orig.Bounds().Max.X * r.factor,
+		Y: r.orig.Bounds().Max.Y * r.factor,
+	}}
+}
+
+func (r resizedImage) At(x, y int) color.Color {
+	if r.delineate && (x%r.factor == 0 || y%r.factor == 0) {
+		return color.Gray{0}
+	}
+	return r.orig.At(x/r.factor, y/r.factor)
 }
 
 type palettedImage struct {

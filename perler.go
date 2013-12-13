@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"text/template"
 )
 
 const (
@@ -30,10 +31,22 @@ const perlerForm = `
 </body></html>
 `
 
-const perlerOut = `
+var perlerTmpl = template.Must(template.New("tmpl").Parse(`
 <html><body>
-  <img src="%s" /><br />
-`
+  <a href="/perler">&laquo; Back</a><br />
+
+  <img src="{{.DataURI}}" /><br />
+
+  {{.Total}} total beads<br />
+  Physical dimensions: {{.PhysDim}}<br />
+
+  <table>
+    {{range .Counts}}
+    <tr><td>{{.Key}}</td><td>{{.Val}}</td>
+    {{end}}
+  </table>
+</body></html>
+`))
 
 func init() {
 	http.HandleFunc("/perler", perlerHandler)
@@ -69,7 +82,6 @@ func perlerHandler(w http.ResponseWriter, r *http.Request) {
 	buf := bytes.NewBuffer(make([]byte, 0, bufSize))
 	png.Encode(buf, resized)
 	dataURI := fmt.Sprintf("data:image/png;base64,%s", base64.StdEncoding.EncodeToString(buf.Bytes()))
-	w.Write([]byte(fmt.Sprintf(perlerOut, dataURI)))
 
 	// Physical dimensions
 	str := func(x int) string {
@@ -77,7 +89,6 @@ func perlerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	physX := str(img.Bounds().Max.X)
 	physY := str(img.Bounds().Max.Y)
-	w.Write([]byte(fmt.Sprintf("Physical dimensions: %s\" x %s\"<br />", physX, physY)))
 
 	// Total and per-bead counts
 	var total uint32
@@ -93,15 +104,17 @@ func perlerHandler(w http.ResponseWriter, r *http.Request) {
 			total++
 		}
 	}
-	w.Write([]byte(fmt.Sprintf("%d total beads<br />", total)))
-	pairs := sortMap(colors)
-	w.Write([]byte("<table>"))
-	for p := 0; p < len(pairs); p++ {
-		w.Write([]byte(fmt.Sprintf("<tr><td>%s</td><td>%d</td></tr>", pairs[p].key, pairs[p].val)))
-	}
-	w.Write([]byte("</table>"))
-
-	w.Write([]byte("</body></html>"))
+	perlerTmpl.Execute(w, struct {
+		DataURI string
+		Total   uint32
+		PhysDim string
+		Counts  []pair
+	}{
+		DataURI: dataURI,
+		Total:   total,
+		PhysDim: fmt.Sprintf("%s\" x %s\"", physX, physY),
+		Counts:  sortMap(colors),
+	})
 }
 
 type resizedImage struct {
@@ -274,13 +287,14 @@ var paletteMap = map[color.Color]string{
 }
 
 type pair struct {
-	key string
-	val uint32
+	Key string
+	Val uint32
 }
 type pairlist []pair
-func (p pairlist) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p pairlist) Len() int { return len(p) }
-func (p pairlist) Less(i, j int) bool { return p[i].val > p[j].val }
+
+func (p pairlist) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p pairlist) Len() int           { return len(p) }
+func (p pairlist) Less(i, j int) bool { return p[i].Val > p[j].Val }
 func sortMap(m map[string]uint32) pairlist {
 	p := make(pairlist, len(m))
 	i := 0

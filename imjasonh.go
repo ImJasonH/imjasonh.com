@@ -9,7 +9,6 @@ const body = `<html><body>
   <p>My App Engine playground, constantly under construction since 2012</p>
   <ul>
     <li><a href="/go">Go</a>: Simple short URL redirector</li>
-    <li><a href="/perler">Perlerlizer</a>: Submit a PNG image and transform it to a Perler bead color palette</li>
     <li><a href="/war">100 Games of War</a>: Simulate playing 100 games of the popular card game War&trade;</li>
     <li><a href="/mail">Mail</a>: Send email to <i>something</i>@imjasonh-hrd.appspot.com and view it online temporarily</li>
   </ul>

@@ -10,7 +10,6 @@ const body = `<html><body>
   <ul>
     <li><a href="/go">Go</a>: Simple short URL redirector</li>
     <li><a href="/war">100 Games of War</a>: Simulate playing 100 games of the popular card game War&trade;</li>
-    <li><a href="/mail">Mail</a>: Send email to <i>something</i>@imjasonh-hrd.appspot.com and view it online temporarily</li>
   </ul>
 </body></html>
 `

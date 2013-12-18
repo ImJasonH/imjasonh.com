@@ -4,12 +4,5 @@ runtime: go
 api_version: go1
 
 handlers:
-- url: /_ah/queue/reapMail
-  login: admin
-  script: _go_app
-
 - url: /.*
   script: _go_app
-
-inbound_services:
-- mail

@@ -1,0 +1,36 @@
+<html>
+<head>
+  <title>Projects</title>
+  <style>
+* {
+  font-family: "Arial";
+}
+  </style>
+</head><body>
+<h1>I like to make things.</h1>
+<p>Here are <i>some</i> of them.</p>
+
+<h2>Code on GitHub</h2>
+<ul>
+<li><b><a href="https://github.com/ImJasonH/gapi">gapi</a></b> is a command-line client for Google APIs.</li>
+<li><b><a href="https://github.com/ImJasonH/simply-put">simply-put</a></b> is a general-purpose REST+JSON backend API for the building of future toy apps.</li>
+<li><b><a href="https://github.com/ImJasonH/gifexplode">gifexplode</a></b> splits an animated GIF into its constituent frames.</li>
+<li><b><a href="https://github.com/ImJasonH/perlerize">perlerize</a></b> generates Perler bead templates from PNG images.</li>
+<li><b><a href="https://github.com/ImJasonH/spam-me">spam-me</a></b> lets you give out an email address without fear of spam.</li>
+<li><b><a href="https://github.com/ImJasonH/pointer-party">pointer-party</a></b> lets your mouse pointer get out there and live a little.</li>
+<li><b><a href="https://github.com/ImJasonH/go-gist">go-gist</a></b> makes it easier to import and use Go code from <a href="https://gist.github.com">GitHub Gists</a>.</li>
+<li><b><a href="https://github.com/ImJasonH/imjasonh.com">imjasonh.com</a></b> runs <a href="http://www.imjasonh.com">imjasonh.com</a>, which you're looking at <i>right now</i></li>
+</ul>
+
+<h3><a href="https://gist.github.com/ImJasonH">Gists</a></h3>
+<ul><li>Because not every random whim needs to be thoroughly explored and actualized.</li></ul>
+
+<h3>Code on code.google.com</h3>
+<p>Generally speaking, this is older code that may or may not still work anymore.</p>
+<ul>
+  <li><b><a href="https://code.google.com/p/chatwithstrangers/">chatwithstrangers</a></b> lets two random people chat using XMPP.</li>
+  <li><b><a href="https://code.google.com/p/100gamesofwar/">100gamesofwar</a></b> takes the time and tedium out of playing 100 games of the card game War.</li>
+  <li><b><a href="https://code.google.com/p/mrjs/">mrjs</a></b> is an experiment in running distributed code in strangers' browser, and is a pretty terrible idea as security is concerned.</li>
+  <li><b><a href="https://code.google.com/p/chrome-4sq/">chrome-4sq</a></b> was a Chrome extension to notify you of your friends' Foursquare checkins, but hasn't been shown any love in a long long time :(</li>
+</ul>
+</body></html>

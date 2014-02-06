@@ -4,6 +4,7 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
+
 	"fmt"
 	"html/template"
 	"net/http"
@@ -17,8 +18,8 @@ type Shortcut struct {
 	Created time.Time
 }
 
-const (
-	form = `<html><body>
+var tmpl = template.Must(template.New("form").Parse(`
+<html><body>
 <form action="/go" method="POST">
   <label for="key">Key</label>
   <input type="text" name="key" id="key"></input><br />
@@ -30,15 +31,22 @@ const (
 </form>
 <ul>
 {{range .Shortcuts}}
-  <li><a href="/go/{{.Key}}">/go/{{.Key}}</a> -> {{.URL}} (created {{.Created}}</li>
+  <li><a href="/go/{{.Key}}">/go/{{.Key}}</a> -> {{.URL}} (created {{.Created}})
+    <form action="/go" method="POST" style="display:inline;">
+      <input type="hidden" name="key" value="{{.Key}}"></input>
+      <input type="hidden" name="delete" value="delete"></input>
+      <input type="submit" value="Delete"></input>
+    </form>
+  </li>
 {{else}}
   <li>You have not created any shortcuts yet.</li>
 {{end}}
 </ul>
 <a href="{{.LogoutURL}}">Log out</a>
 </body></html>
-`
+`))
 
+const (
 	login = `<html><body>
   <a href="{{.LoginURL}}">Log in to create shortcuts</a>
 </body></html>`
@@ -48,13 +56,14 @@ const (
 
 func init() {
 	http.HandleFunc("/go", newGo)
-	http.HandleFunc("/go/", go_)
+	http.HandleFunc("/go/", doGo)
 }
 
 func newGo(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
 	if err := r.ParseForm(); err != nil {
+		c.Errorf("ParseForm:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -63,6 +72,7 @@ func newGo(w http.ResponseWriter, r *http.Request) {
 	if usr == nil {
 		loginURL, err := user.LoginURL(c, path)
 		if err != nil {
+			c.Errorf("LoginURL:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -73,10 +83,12 @@ func newGo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method == "GET" {
+	switch r.Method {
+	case "GET":
 		// Display new shortcut form
 		logout, err := user.LogoutURL(c, r.URL.String())
 		if err != nil {
+			c.Errorf("LogoutURL:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -87,6 +99,7 @@ func newGo(w http.ResponseWriter, r *http.Request) {
 			Limit(100)
 		cnt, err := q.Count(c)
 		if err != nil {
+			c.Errorf("Count:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -99,27 +112,43 @@ func newGo(w http.ResponseWriter, r *http.Request) {
 				if err == datastore.Done {
 					break
 				}
+				c.Errorf("Next:", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			scuts[i] = map[string]interface{}{
 				"Key":     key.StringID(),
 				"URL":     s.URL,
-				"Created": s.Created.String(),
+				"Created": s.Created.Format(time.RFC822),
 			}
 			i++
 		}
 
-		t := template.Must(template.New("form").Parse(form))
-		t.Execute(w, map[string]interface{}{
+		tmpl.Execute(w, map[string]interface{}{
 			"LogoutURL": logout,
 			"Shortcuts": scuts,
 		})
-	} else if r.Method == "POST" {
+	case "POST":
 		// Save shortcut
 		k := r.FormValue("key")
-		u := r.FormValue("url")
 
+		if r.FormValue("delete") == "delete" {
+			if k == "" {
+				http.Error(w, "Must provide key", http.StatusBadRequest)
+				return
+			}
+			dsKey := datastore.NewKey(c, "Shortcut", k, 0, nil)
+			if err := datastore.Delete(c, dsKey); err != nil {
+				c.Errorf("Delete:", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			time.Sleep(time.Second) // TODO: Stop being lazy.
+			http.Redirect(w, r, "/go", http.StatusSeeOther)
+			return
+		}
+
+		u := r.FormValue("url")
 		if k == "" || u == "" {
 			http.Error(w, "Must provide key and URL", http.StatusBadRequest)
 			return
@@ -159,21 +188,24 @@ func newGo(w http.ResponseWriter, r *http.Request) {
 			Created: time.Now(),
 		}
 		if _, err := datastore.Put(c, dsKey, &s); err != nil {
+			c.Errorf("Put:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		fmt.Fprintf(w, "Success!")
-	} else {
-		// TODO: Support DELETE?
+		time.Sleep(time.Second) // TODO: Stop being lazy.
+		http.Redirect(w, r, "/go", http.StatusSeeOther)
+	case "DELETE":
+	default:
 		http.Error(w, "Unsupported method", http.StatusMethodNotAllowed)
 	}
 }
 
-// go_ redirects to a previsouly-defined URL by going to /go/<key>
-func go_(w http.ResponseWriter, r *http.Request) {
+// doGo redirects to a previsouly-defined URL by going to /go/<key>
+func doGo(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
 	if err := r.ParseForm(); err != nil {
+		c.Errorf("ParseForm:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -184,11 +216,17 @@ func go_(w http.ResponseWriter, r *http.Request) {
 	dsKey := datastore.NewKey(c, "Shortcut", key, 0, nil)
 	if err := datastore.Get(c, dsKey, &s); err != nil {
 		if err == datastore.ErrNoSuchEntity {
-			http.Error(w, "No such shortcut exists", http.StatusNotFound)
+			http.Error(w, fmt.Sprintf("Shortcut '%s' does not exist", key), http.StatusNotFound)
 		} else {
+			c.Errorf("Get:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
-	http.Redirect(w, r, s.URL, http.StatusMovedPermanently)
+
+	if r.Form.Get("view") == "" {
+		http.Redirect(w, r, s.URL, http.StatusMovedPermanently)
+	} else {
+		w.Write([]byte(fmt.Sprintf("<a href=\"%s\">%s</a>", s.URL, s.URL)))
+	}
 }

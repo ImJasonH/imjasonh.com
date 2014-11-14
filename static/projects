@@ -8,11 +8,7 @@ body {
   </style>
 </head><body>
 <h1>I like to make things.</h1>
-<p>Here are <i>some</i> of them.</p>
-
-<ul>
-<li><a href="/taxi/map">Interactive heatmap of NYC taxi pickups in 2013</li>
-</ul>
+<p>Here are some of them.</p>
 
 <h2>Code on GitHub</h2>
 <ul>
@@ -39,6 +35,7 @@ body {
 <h3>Other projects</h3>
 <p>Stuff there isn't public code for...yet.</p>
 <ul>
+  <li><a href="/taxi/map">Interactive heatmap of NYC taxi pickups in 2013</li>
   <li>Scripts to spin up a cluster of VMs to process and upload <a href="https://bigquery.cloud.google.com/table/bq-wikipedia:wikipedia.revisions">Wikipedia revision data to BigQuery</a></li>
   <li>An Android Wear app that translates speech to vibrated Morse code, and teaches Morse code using flash cards on your wrist</li>
 </ul>

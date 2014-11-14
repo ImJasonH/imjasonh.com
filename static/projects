@@ -19,7 +19,7 @@ body {
 <li><b><a href="https://github.com/ImJasonH/gapi">gapi</a></b> is a command-line client for Google APIs.</li>
 <li><b><a href="https://github.com/ImJasonH/simply-put">simply-put</a></b> is a general-purpose REST+JSON backend API for the building of future toy apps.</li>
 <li><b><a href="https://github.com/ImJasonH/gifexplode">gifexplode</a></b> splits an animated GIF into its constituent frames.</li>
-<li><b><a href="https://github.com/ImJasonH/palette">palette</a></b> generates crafting patterns from PNG images.</li>
+<li><b><a href="https://github.com/ImJasonH/crafty">crafty</a></b> generates crafting patterns from small images.</li>
 <li><b><a href="https://github.com/ImJasonH/csvstruct">csvstruct</a></b> makes it easy to generate CSV data from Go structs</li>
 <li><b><a href="https://github.com/ImJasonH/tros">tros</a></b> allows you to sort slices of structs using reflection in Go (get it?)</li>
 <li><b><a href="https://github.com/ImjasonH/go-marvel">go-marvel</a></b> is a Go client library for the Marvel API, which lets you do <a href="http://www.imjasonh.com/dump/2258.gif">cool stuff</a></li>

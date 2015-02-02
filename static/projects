@@ -10,11 +10,7 @@ body {
 <h1>I like to make things.</h1>
 <p>Here are <i>some</i> of them.</p>
 
-<ul>
-<li><a href="/taxi/map">Interactive heatmap of NYC taxi pickups in 2013</li>
-</ul>
-
-<h2>Code on GitHub</h2>
+<h2>Projects on GitHub</h2>
 <ul>
 <li><b><a href="https://github.com/ImJasonH/gapi">gapi</a></b> is a command-line client for Google APIs.</li>
 <li><b><a href="https://github.com/ImJasonH/simply-put">simply-put</a></b> is a general-purpose REST+JSON backend API for the building of future toy apps.</li>
@@ -29,20 +25,14 @@ body {
 <li><b><a href="https://github.com/ImJasonH/imjasonh.com">imjasonh.com</a></b> runs <a href="http://www.imjasonh.com">imjasonh.com</a>, which you're looking at <i>right now</i></li>
 </ul>
 
-<h3>Code on code.google.com</h3>
-<p>Generally speaking, this is older code that may or may not still work anymore.</p>
-<ul>
-  <li><b><a href="https://code.google.com/p/chatwithstrangers/">chatwithstrangers</a></b> lets two random people chat using XMPP.</li>
-  <li><b><a href="https://code.google.com/p/mrjs/">mrjs</a></b> is an experiment in running distributed code in strangers' browser, and is a pretty terrible idea as security is concerned.</li>
-  <li><b><a href="https://code.google.com/p/chrome-4sq/">chrome-4sq</a></b> was a Chrome extension to notify you of your friends' Foursquare checkins, but hasn't been shown any love in a long long time :(</li>
-</ul>
-
 <h3>Other projects</h3>
 <p>Stuff there isn't public code for...yet.</p>
 <ul>
   <li>Scripts to spin up a cluster of VMs to process and upload <a href="https://bigquery.cloud.google.com/table/bq-wikipedia:wikipedia.revisions">Wikipedia revision data to BigQuery</a></li>
   <li>An Android Wear app that translates speech to vibrated Morse code, and teaches Morse code using flash cards on your wrist</li>
-  <li>Initial backend code that powers <a href="https://golang.org/dl">golang.org/dl</a></li>
+  <li><a href="/taxi/map">Interactive heatmap of NYC taxi pickups in 2013</li>
+</ul>
+
 </ul>
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

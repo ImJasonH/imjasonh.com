@@ -28,7 +28,7 @@ div#center {
 
 <h3>Google, Inc (Jan 2008 - Present)</h3>
 <ul>
-  <li><a href="https://cloud.google.com">Google Cloud Platform Developer Tools</a></li>
+  <li><a href="https://cloud.google.com">Google Cloud Platform Developer Tools</a> (2012 - Present)</li>
   <ul>
     <li>Refactored Git repository hosting infrastructure to support <a href="https://developers.google.com/cloud/devtools/repo/cloud-repositories">scalable private code hosting for Cloud customers</a></li>
     <li>Launched <a href="https://developers.google.com/cloud/devtools/repo/cloud-repositories#connect_a_github_repository">Connected Repositories</a> to allow GitHub and Bitbucket users to use our code hosting tools</li>
@@ -40,7 +40,8 @@ div#center {
   <ul>
     <li>Supported teams developing open source software, focusing on increasing developer team productivity for internal and external users</li>
     <li>Designed and evolved multiple internal and external REST and RPC APIs used by many teams</li>
-    <li>Designed and implemented service to build untrusted code in the Google Cloud using App Engine and Compute Engine (canceled)</li>
+    <li>Designed and implemented a service to build untrusted code in the Google Cloud using App Engine and Compute Engine (canceled)</li>
+    <li>Launched a tool to <a href="https://code.google.com/export-to-github/">automatically export Google Code projects to GitHub</a>, to support the turndown of Google Code in 2016.</a>
   </ul>
   <li><a href="http://developers.google.com/apis-explorer">Google APIs</a> (Aug 2010 - Jul 2011)</li>
   <ul>

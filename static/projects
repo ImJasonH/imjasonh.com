@@ -17,6 +17,7 @@ body {
   <li><b><a href="https://github.com/ImJasonH/gifexplode">gifexplode</a></b> splits an animated GIF into its constituent frames.</li>
   <li><b><a href="https://github.com/ImJasonH/crafty">crafty</a></b> generates <a href="/projects/crafty">crafting templates</a> of video game sprites.</li>
   <li><b><a href="https://github.com/ImJasonH/nopullrequests">nopullrequests</a></b> powers <a href="http://nopullrequests.com">nopullrequests.com</a>, the GitHub Pull Request Rejection Bot.</li>
+  <li><b><a href="https://github.com/ImJasonH/drive-dedupe">drive-dedupe</a></b> powers <a href="http://drive-dedupe.appspot.com/">this app</a>, which reports on wasted Google Drive quota due to duplicate files.</li>
   <li><b><a href="https://github.com/ImJasonH/csvstruct">csvstruct</a></b> makes it easy to generate CSV data from Go structs</li>
   <li><b><a href="https://github.com/ImJasonH/tros">tros</a></b> allows you to sort slices of structs using reflection in Go (get it?)</li>
   <li><b><a href="https://github.com/ImjasonH/go-marvel">go-marvel</a></b> is a Go client library for the Marvel API, which lets you do <a href="http://www.imjasonh.com/dump/2258.gif">cool stuff</a></li>

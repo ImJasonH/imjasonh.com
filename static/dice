@@ -1,5 +1,6 @@
 <html>
 <head>
+<title>Liar's Dice</title>
 <meta name="viewport" content="width=device-width,user-scalable=no">
 <style>
 div#all {
@@ -20,6 +21,11 @@ div.dice {
 	display: inline-block;
 	text-align: center;
 	font-size: 30px;
+}
+	
+div.shake {
+	animation-name: shake;
+	animation-duration: 1s;
 }
 
 div#container {
@@ -44,13 +50,27 @@ div.dice[data-val='3']:before { content: '...'; }
 div.dice[data-val='4']:before { content: '....'; }
 div.dice[data-val='5']:before { content: '.....'; }
 div.dice[data-val='6']:before { content: '......'; }
+
+@keyframes shake {
+	0% { transform: rotate(10deg); }
+	10% { transform: rotate(-10deg); }
+	20% { transform: rotate(10deg); }
+	30% { transform: rotate(-5deg); }
+	40% { transform: rotate(5deg); }
+	50% { transform: rotate(-2.5deg); }
+	60% { transform: rotate(2.5deg); }
+	70% { transform: rotate(-2.5deg); }
+	80% { transform: rotate(2.5deg); }
+	90% { transform: rotate(-2.5deg); }
+	100% { transform: rotate(0deg); }
+}
 </style>
 <script type="text/javascript">
 var start = function() {
 	var c = document.getElementById('container');
 	for (var i = 0; i < 5; i++) {
 		var d = document.createElement('div');
-		d.className = 'dice';
+		d.classList.add('dice');
 		c.appendChild(d);
 	}
 	newGame();
@@ -68,6 +88,9 @@ var newGame = function() {
 var roll = function() {
 	var dice = document.getElementsByClassName('dice');
 	for (var i = 0; i < dice.length; i++) {
+		dice[i].classList.remove('shake');
+	  dice[i].offsetWidth = dice[i].offsetWidth;
+		dice[i].classList.add('shake');
 		dice[i].dataset.val = Math.floor(Math.random()*5)+1;
 	}
 };

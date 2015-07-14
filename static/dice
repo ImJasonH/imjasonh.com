@@ -1,0 +1,96 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width,user-scalable=no">
+<style>
+div#all {
+	width: 300px;
+	padding: 3px;
+	margin: 0;
+}
+body {
+	margin: 0;
+}
+
+div.dice {
+	border: 1px solid black;
+	border-radius: 3px;
+	width: 50px;
+	height: 50px;
+	margin: 3px;
+	display: inline-block;
+	text-align: center;
+	font-size: 30px;
+}
+
+div#container {
+	width: 300px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+div#buttons {
+	margin-left: auto;
+	margin-right: auto;
+	width: 210px;
+}
+button {
+	width: 100px;
+	height: 50px;
+}
+
+div.dice[data-val='1']:before { content: '.'; }
+div.dice[data-val='2']:before { content: '..'; }
+div.dice[data-val='3']:before { content: '...'; }
+div.dice[data-val='4']:before { content: '....'; }
+div.dice[data-val='5']:before { content: '.....'; }
+div.dice[data-val='6']:before { content: '......'; }
+</style>
+<script type="text/javascript">
+var start = function() {
+	var c = document.getElementById('container');
+	for (var i = 0; i < 5; i++) {
+		var d = document.createElement('div');
+		d.className = 'dice';
+		c.appendChild(d);
+	}
+	newGame();
+};
+window.onload = start;
+
+var newGame = function() {
+	var c = document.getElementById('container');
+	for (var i = 0; i < c.childNodes; i++) {
+		c[i].style.display = 'inline-block';
+	}
+	roll();
+};
+
+var roll = function() {
+	var dice = document.getElementsByClassName('dice');
+	for (var i = 0; i < dice.length; i++) {
+		dice[i].dataset.val = Math.floor(Math.random()*5)+1;
+	}
+};
+
+var iLost = function() {
+	var c = document.getElementById('container');
+	c.removeChild(c.firstChild);
+	if (c.childNodes.length == 0) {
+		document.getElementById('all').style.display = 'none';
+		window.alert("You're out!");
+		window.location.reload();
+	}
+	roll();
+};
+</script>
+</head>
+<body>
+<div id="all">
+<div id="container"></div>
+<div id="buttons">
+  <button id="lost" onclick="iLost()">I lost :(</button>
+  <button id="next" onclick="roll()">Next hand -></button>
+</div>
+</div>
+</body>
+</html>

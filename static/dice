@@ -21,6 +21,8 @@ div.dice {
 	display: inline-block;
 	text-align: center;
 	font-size: 30px;
+	font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+	line-height: 48px;
 }
 	
 div.shake {
@@ -43,13 +45,6 @@ button {
 	width: 100px;
 	height: 50px;
 }
-
-div.dice[data-val='1']:before { content: '.'; }
-div.dice[data-val='2']:before { content: '..'; }
-div.dice[data-val='3']:before { content: '...'; }
-div.dice[data-val='4']:before { content: '....'; }
-div.dice[data-val='5']:before { content: '.....'; }
-div.dice[data-val='6']:before { content: '......'; }
 
 @keyframes shake {
 	0% { -webkit-transform: rotate(10deg); transform: rotate(10deg); }
@@ -91,7 +86,7 @@ var roll = function() {
 		dice[i].classList.remove('shake');
 	  dice[i].offsetWidth = dice[i].offsetWidth;
 		dice[i].classList.add('shake');
-		dice[i].dataset.val = Math.floor(Math.random()*6)+1;
+		dice[i].innerText = Math.floor(Math.random()*6)+1;
 	}
 };
 

@@ -26,8 +26,8 @@ div.dice {
 }
 	
 div.shake {
-	animation-name: shake;
-	animation-duration: 1s;
+	animation: shake 1s linear 0s;
+	-webkit-animation: shake 1s linear 0s;
 }
 
 div#container {
@@ -47,18 +47,32 @@ button {
 }
 
 @keyframes shake {
-	0% { -webkit-transform: rotate(10deg); transform: rotate(10deg); }
-	10% { -webkit-transform: rotate(-10deg); transform: rotate(-10deg); }
-	20% { -webkit-transform: rotate(10deg); transform: rotate(10deg); }
-	30% { -webkit-transform: rotate(-5deg); transform: rotate(-5deg); }
-	40% { -webkit-transform: rotate(5deg); transform: rotate(5deg); }
-	50% { -webkit-transform: rotate(-2.5deg); transform: rotate(-2.5deg); }
-	60% { -webkit-transform: rotate(2.5deg); transform: rotate(2.5deg); }
-	70% { -webkit-transform: rotate(-2.5deg); transform: rotate(-2.5deg); }
-	80% { -webkit-transform: rotate(2.5deg); transform: rotate(2.5deg); }
-	90% { -webkit-transform: rotate(-2.5deg); transform: rotate(-2.5deg); }
-	100% { -webkit-transform: rotate(0deg); transform: rotate(0deg); }
+	0% { transform: rotate(10deg); }
+	10% { transform: rotate(-10deg); }
+	20% { transform: rotate(10deg); }
+	30% { transform: rotate(-5deg); }
+	40% { transform: rotate(5deg); }
+	50% { transform: rotate(-2.5deg); }
+	60% { transform: rotate(2.5deg); }
+	70% { transform: rotate(-2.5deg); }
+	80% { transform: rotate(2.5deg); }
+	90% { transform: rotate(-2.5deg); }
+	100% { transform: rotate(0deg); }
 }
+@-webkit-keyframes shake {
+	0% { -webkit-transform: rotate(10deg); }
+	10% { -webkit-transform: rotate(-10deg); }
+	20% { -webkit-transform: rotate(10deg); }
+	30% { -webkit-transform: rotate(-5deg); }
+	40% { -webkit-transform: rotate(5deg); }
+	50% { -webkit-transform: rotate(-2.5deg); }
+	60% { -webkit-transform: rotate(2.5deg); }
+	70% { -webkit-transform: rotate(-2.5deg); }
+	80% { -webkit-transform: rotate(2.5deg); }
+	90% { -webkit-transform: rotate(-2.5deg); }
+	100% { -webkit-transform: rotate(0deg); }
+}
+
 </style>
 <script type="text/javascript">
 var start = function() {

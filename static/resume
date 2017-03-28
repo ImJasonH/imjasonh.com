@@ -30,7 +30,7 @@ div#center {
 <ul>
   <li><a href="https://cloud.google.com">Google Cloud Platform Developer Tools</a> (2012 - Present)</li>
   <ul>
-    <li>Launched <a href="https://cloud.google.com/container-builder/docs/">Cloud Container Builder API</a> to allow developers to build Docker images programmatically and hermetically in the cloud.</li>
+    <li>Launched <a href="https://cloud.google.com/container-builder/">Cloud Container Builder</a> to allow developers to build Docker images programmatically and hermetically in the cloud.</li>
     <li>Refactored Git repository hosting infrastructure to support <a href="https://developers.google.com/cloud/devtools/repo/cloud-repositories">scalable private code hosting for Cloud customers</a></li>
     <li>Launched <a href="https://developers.google.com/cloud/devtools/repo/cloud-repositories#connect_a_github_repository">Connected Repositories</a> to allow GitHub and Bitbucket users to use our code hosting tools</li>
     <li>Integrated with App Engine deployment services to enable initial launch of <a href="https://developers.google.com/cloud/devtools/repo/push-to-deploy">Git push-to-deploy for App Engine apps</a> (canceled)</li>

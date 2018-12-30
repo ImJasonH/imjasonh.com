@@ -14,6 +14,7 @@ body {
 <ul>
   <li><b><a href="https://github.com/ImJasonH/gcping">gcping.com</a></b> is a site to measure your latency to GCP regions.</li>
   <li><b><a href="https://github.com/ImJasonH/makemecall">Make Me Call</a></b> is a service to periodically make you call your congressperson.</li>
+  <li><b><a href="https://github.com/ImJasonH/quit.social">quit.social</a></b> is a web app to help stop using social media.</li>
   <li><b><a href="https://github.com/ImJasonH/gapi">gapi</a></b> is a command-line client for Google APIs.</li>
   <li><b><a href="https://github.com/ImJasonH/top9">top9</a></b> shows your top 9 Instagram posts by year.</li>
   <li><b><a href="https://github.com/ImJasonH/crafty">crafty</a></b> generates <a href="/projects/crafty">crafting templates</a> of video game sprites.</li>
